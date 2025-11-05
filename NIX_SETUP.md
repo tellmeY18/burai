@@ -152,6 +152,53 @@ echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
 
 If you encounter JavaFX-related errors, ensure you're using the provided JDK from the Nix environment (JDK 17 with JavaFX enabled), not a system-installed Java.
 
+#### Prism ES2 Error (glXChooseFBConfig failed)
+
+If you see an error like "Prism ES2 Error - nInitialize: glXChooseFBConfig failed", this means JavaFX is trying to use hardware-accelerated graphics but cannot access the necessary graphics libraries. This commonly happens in:
+
+- Headless environments (servers without GUI)
+- Virtual machines without 3D acceleration
+- SSH sessions without X11 forwarding
+- Systems with missing OpenGL libraries
+
+**Solution 1: Use software rendering mode**
+
+Set the environment variable to use software rendering instead of hardware acceleration:
+
+```bash
+export BURAI_SOFTWARE_RENDER=1
+burai-run
+```
+
+**Solution 2: Install required graphics libraries**
+
+On NixOS, ensure you have the necessary OpenGL libraries:
+```bash
+# Add to your system configuration
+hardware.opengl.enable = true;
+```
+
+On other Linux distributions:
+```bash
+# Ubuntu/Debian
+sudo apt-get install libgl1-mesa-glx libglu1-mesa
+
+# Fedora/RHEL
+sudo dnf install mesa-libGL mesa-libGLU
+
+# Arch Linux
+sudo pacman -S mesa
+```
+
+**Solution 3: Enable X11 forwarding for remote sessions**
+
+If running over SSH:
+```bash
+ssh -X user@host
+# or with compression
+ssh -XC user@host
+```
+
 ### Build failures
 
 Try cleaning and rebuilding:

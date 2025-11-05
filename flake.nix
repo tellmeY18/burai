@@ -61,7 +61,16 @@
           fi
 
           echo "Starting BURAI..."
+          
+          # Check if we should use software rendering (for systems without GPU/X11)
+          JAVA_OPTS=""
+          if [ "$BURAI_SOFTWARE_RENDER" = "1" ]; then
+            echo "Using software rendering mode..."
+            JAVA_OPTS="-Dprism.order=sw -Dprism.verbose=true"
+          fi
+          
           ${jdk}/bin/java \
+            $JAVA_OPTS \
             -cp "class:${libClasspath}" \
             burai.app.QEFXMain "$@"
         '';
@@ -151,6 +160,10 @@
             echo "To get started:"
             echo "  1. Run 'burai-build' to compile the project"
             echo "  2. Run 'burai-run' to start the application"
+            echo ""
+            echo "Note: If you get JavaFX/OpenGL errors, use software rendering:"
+            echo "  export BURAI_SOFTWARE_RENDER=1"
+            echo "  burai-run"
             echo "================================================"
           '';
 
