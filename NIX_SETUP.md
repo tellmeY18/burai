@@ -107,6 +107,7 @@ The development environment provides:
   - `burai-run` - Runs the application
   - `burai-clean` - Removes build artifacts
   - `burai-jar` - Creates a JAR file
+- **Graphics Libraries**: OpenGL, X11, GTK3, Mesa, and related dependencies for JavaFX GUI support
 
 ## Environment Variables
 
@@ -114,16 +115,28 @@ When you enter the development shell, the following environment variables are se
 
 - `JAVA_HOME` - Points to the JDK installation
 - `CLASSPATH` - Includes all required JAR dependencies
+- `LD_LIBRARY_PATH` - Includes paths to graphics libraries (X11, OpenGL, GTK, etc.)
 
 ## Dependencies
 
-The following external libraries are automatically included in the classpath:
+### Java Libraries
+
+The following external JAR libraries are automatically included in the classpath:
 
 - exp4j-0.4.6.jar
 - gson-2.6.1.jar
 - jcodec-0.2.0.jar
 - jcodec-javase-0.2.0.jar
 - jsch-0.1.54.jar
+
+### System Libraries
+
+The following system libraries are included for JavaFX graphics support:
+
+- X11 libraries (libX11, libXext, libXtst, libXi, libXrender, libXxf86vm)
+- OpenGL libraries (libGL, libGLU, mesa)
+- GTK3 and related libraries (gtk3, cairo, glib, pango, gdk-pixbuf, atk)
+- Font libraries (freetype, fontconfig)
 
 ## Using with direnv (Optional)
 
@@ -154,14 +167,18 @@ If you encounter JavaFX-related errors, ensure you're using the provided JDK fro
 
 #### Prism ES2 Error (glXChooseFBConfig failed)
 
-If you see an error like "Prism ES2 Error - nInitialize: glXChooseFBConfig failed", this means JavaFX is trying to use hardware-accelerated graphics but cannot access the necessary graphics libraries. This commonly happens in:
+If you see an error like "Prism ES2 Error - nInitialize: glXChooseFBConfig failed", this means JavaFX is trying to use hardware-accelerated graphics but cannot initialize properly. 
+
+**Note:** The development shell now includes all necessary graphics libraries (OpenGL, X11, GTK3, etc.), so this error is less common. However, it may still occur in certain environments.
+
+Common scenarios where this can happen:
 
 - Headless environments (servers without GUI)
 - Virtual machines without 3D acceleration
 - SSH sessions without X11 forwarding
-- Systems with missing OpenGL libraries
+- Wayland sessions without XWayland
 
-**Solution 1: Use software rendering mode**
+**Solution 1: Use software rendering mode (Recommended)**
 
 Set the environment variable to use software rendering instead of hardware acceleration:
 
@@ -170,24 +187,14 @@ export BURAI_SOFTWARE_RENDER=1
 burai-run
 ```
 
-**Solution 2: Install required graphics libraries**
+**Solution 2: Enable hardware OpenGL on NixOS**
 
-On NixOS, ensure you have the necessary OpenGL libraries:
+On NixOS, ensure hardware OpenGL is enabled in your system configuration:
 ```bash
-# Add to your system configuration
+# Add to /etc/nixos/configuration.nix
 hardware.opengl.enable = true;
-```
-
-On other Linux distributions:
-```bash
-# Ubuntu/Debian
-sudo apt-get install libgl1-mesa-glx libglu1-mesa
-
-# Fedora/RHEL
-sudo dnf install mesa-libGL mesa-libGLU
-
-# Arch Linux
-sudo pacman -S mesa
+hardware.opengl.driSupport = true;
+hardware.opengl.driSupport32Bit = true;  # For 32-bit applications
 ```
 
 **Solution 3: Enable X11 forwarding for remote sessions**

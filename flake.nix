@@ -135,6 +135,25 @@
             runScript
             cleanScript
             jarScript
+            
+            # Graphics and X11 libraries for JavaFX
+            pkgs.xorg.libX11
+            pkgs.xorg.libXext
+            pkgs.xorg.libXtst
+            pkgs.xorg.libXi
+            pkgs.xorg.libXrender
+            pkgs.xorg.libXxf86vm
+            pkgs.libGL
+            pkgs.libGLU
+            pkgs.mesa
+            pkgs.gtk3
+            pkgs.cairo
+            pkgs.glib
+            pkgs.pango
+            pkgs.gdk-pixbuf
+            pkgs.atk
+            pkgs.freetype
+            pkgs.fontconfig
           ];
 
           shellHook = ''
@@ -161,7 +180,8 @@
             echo "  1. Run 'burai-build' to compile the project"
             echo "  2. Run 'burai-run' to start the application"
             echo ""
-            echo "Note: If you get JavaFX/OpenGL errors, use software rendering:"
+            echo "Graphics libraries (OpenGL, X11, GTK) are included."
+            echo "If the GUI doesn't show, try software rendering:"
             echo "  export BURAI_SOFTWARE_RENDER=1"
             echo "  burai-run"
             echo "================================================"
@@ -170,6 +190,27 @@
           # Environment variables
           JAVA_HOME = "${jdk}";
           CLASSPATH = "./class:${libClasspath}";
+          
+          # Add graphics libraries to library path for JavaFX
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+            pkgs.xorg.libX11
+            pkgs.xorg.libXext
+            pkgs.xorg.libXtst
+            pkgs.xorg.libXi
+            pkgs.xorg.libXrender
+            pkgs.xorg.libXxf86vm
+            pkgs.libGL
+            pkgs.libGLU
+            pkgs.mesa
+            pkgs.gtk3
+            pkgs.cairo
+            pkgs.glib
+            pkgs.pango
+            pkgs.gdk-pixbuf
+            pkgs.atk
+            pkgs.freetype
+            pkgs.fontconfig
+          ];
         };
 
         # Default package (optional - for building the application as a Nix package)
