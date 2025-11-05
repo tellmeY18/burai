@@ -7,3 +7,9 @@
 /bin/*.jar
 /bin/*.exe
 /docs/build
+
+# Nix
+result
+result-*
+.direnv
+.envrc
