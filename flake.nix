@@ -33,6 +33,7 @@
           echo "Compiling Java sources..."
           find src -name "*.java" > sources.txt
           ${jdk}/bin/javac \
+            -encoding UTF-8 \
             -d class \
             -sourcepath src \
             -cp "${libClasspath}" \
@@ -168,6 +169,7 @@
             # Compile Java sources
             find src -name "*.java" > sources.txt
             javac \
+              -encoding UTF-8 \
               -d class \
               -sourcepath src \
               -cp "${libClasspath}" \
