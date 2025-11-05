@@ -16,6 +16,9 @@
           enableJavaFX = true;
         };
         
+        # External dependencies classpath
+        libClasspath = "lib/exp4j-0.4.6.jar:lib/gson-2.6.1.jar:lib/jcodec-0.2.0.jar:lib/jcodec-javase-0.2.0.jar:lib/jsch-0.1.54.jar";
+        
         # Build script for the application
         buildScript = pkgs.writeShellScriptBin "burai-build" ''
           #!/usr/bin/env bash
@@ -32,7 +35,7 @@
           ${jdk}/bin/javac \
             -d class \
             -sourcepath src \
-            -cp "lib/exp4j-0.4.6.jar:lib/gson-2.6.1.jar:lib/jcodec-0.2.0.jar:lib/jcodec-javase-0.2.0.jar:lib/jsch-0.1.54.jar" \
+            -cp "${libClasspath}" \
             @sources.txt
           rm sources.txt
           
@@ -52,7 +55,7 @@
           
           echo "Starting BURAI..."
           ${jdk}/bin/java \
-            -cp "class:lib/exp4j-0.4.6.jar:lib/gson-2.6.1.jar:lib/jcodec-0.2.0.jar:lib/jcodec-javase-0.2.0.jar:lib/jsch-0.1.54.jar" \
+            -cp "class:${libClasspath}" \
             burai.app.QEFXMain "$@"
         '';
         
@@ -74,12 +77,30 @@
             burai-build
           fi
           
-          echo "Creating JAR file..."
+          echo "Creating JAR file with embedded dependencies..."
+          
+          # Create a temporary directory for JAR contents
+          mkdir -p /tmp/burai-jar
+          cp -r class/* /tmp/burai-jar/
+          
+          # Extract library JARs into temporary directory
+          cd /tmp/burai-jar
+          for jar in ../../lib/*.jar; do
+            ${jdk}/bin/jar -xf "$jar"
+          done
+          
+          # Remove signature files that may cause conflicts
+          find . -name "*.SF" -o -name "*.DSA" -o -name "*.RSA" -delete
+          
+          # Create the final JAR
+          cd -
           ${jdk}/bin/jar --create \
             --file burai.jar \
             --main-class burai.app.QEFXMain \
-            -C class . \
-            -C lib .
+            -C /tmp/burai-jar .
+          
+          # Clean up
+          rm -rf /tmp/burai-jar
           
           echo "JAR created: burai.jar"
         '';
@@ -128,7 +149,7 @@
           
           # Environment variables
           JAVA_HOME = "${jdk}";
-          CLASSPATH = "./class:./lib/exp4j-0.4.6.jar:./lib/gson-2.6.1.jar:./lib/jcodec-0.2.0.jar:./lib/jcodec-javase-0.2.0.jar:./lib/jsch-0.1.54.jar";
+          CLASSPATH = "./class:${libClasspath}";
         };
         
         # Default package (optional - for building the application as a Nix package)
@@ -149,7 +170,7 @@
             javac \
               -d class \
               -sourcepath src \
-              -cp "lib/exp4j-0.4.6.jar:lib/gson-2.6.1.jar:lib/jcodec-0.2.0.jar:lib/jcodec-javase-0.2.0.jar:lib/jsch-0.1.54.jar" \
+              -cp "${libClasspath}" \
               @sources.txt
           '';
           
@@ -161,10 +182,16 @@
             cp -r lib $out/share/burai/
             
             # Create wrapper script
+            # Build classpath with proper prefix
+            INSTALL_CLASSPATH="$out/share/burai/class"
+            for jar in lib/*.jar; do
+              INSTALL_CLASSPATH="$INSTALL_CLASSPATH:$out/share/burai/$jar"
+            done
+            
             cat > $out/bin/burai << EOF
             #!${pkgs.bash}/bin/bash
             exec ${jdk}/bin/java \
-              -cp "$out/share/burai/class:$out/share/burai/lib/exp4j-0.4.6.jar:$out/share/burai/lib/gson-2.6.1.jar:$out/share/burai/lib/jcodec-0.2.0.jar:$out/share/burai/lib/jcodec-javase-0.2.0.jar:$out/share/burai/lib/jsch-0.1.54.jar" \
+              -cp "$INSTALL_CLASSPATH" \
               burai.app.QEFXMain "\$@"
             EOF
             
