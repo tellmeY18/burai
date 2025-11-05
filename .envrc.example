@@ -1,0 +1,7 @@
+# Automatically load the Nix development environment with direnv
+# To use this:
+# 1. Install direnv: https://direnv.net/
+# 2. Copy this file to .envrc: cp .envrc.example .envrc
+# 3. Allow direnv for this directory: direnv allow
+
+use flake
